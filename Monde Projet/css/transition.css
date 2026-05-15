@@ -1,0 +1,14 @@
+/* Animation quand la page arrive */
+body {
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+body.loaded {
+  opacity: 1;
+}
+
+/* Animation quand on quitte la page */
+.fade-out {
+  opacity: 0;
+}
