@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Multivers 3D ULTIME</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      overflow: hidden;
+      background: #050510;
+      font-family: Poppins, sans-serif;
+      color: #fff;
+    }
+
+    .announcement-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 8px 16px;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      font-size: 0.9rem;
+      text-align: center;
+      z-index: 1000;
+      pointer-events: none;
+    }
+    .announcement-bar.hidden { display: none; }
+
+    .scene {
+      width: 100vw;
+      height: 100vh;
+      perspective: 2000px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .world {
+      width: 600vw;
+      height: 600vh;
+      position: absolute;
+      top: -250vh;
+      left: -250vw;
+      transform-style: preserve-3d;
+      transition: transform 0.08s linear;
+    }
+
+    .page {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      opacity: 0;
+      transform: scale(1.1);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+      pointer-events: none;
+    }
+    .page.active {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+
+    .btn, .da-btn, .admin-btn, .admin-panel button {
+      margin-top: 8px;
+      padding: 10px 24px;
+      border-radius: 999px;
+      border: 2px solid #fff;
+      color: #fff;
+      cursor: pointer;
+      transition: 0.25s;
+      font-size: 0.95rem;
+      background: transparent;
+    }
+    .btn:hover, .da-btn:hover, .admin-btn:hover, .admin-panel button:hover {
+      background: #fff;
+      color: #000;
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 0 25px rgba(255,255,255,0.4);
+    }
+
+    h1 {
+      color: #ffffff;
+      text-shadow: 0 0 20px #0ff;
+      font-size: 3rem;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    /* fonds simples */
+    #accueil { background: radial-gradient(circle at top, #1b1b3a, #050510); }
+    #feu { background: radial-gradient(circle, #ff4500, #3b0000); }
+    #ocean { background: radial-gradient(circle, #00c6ff, #001a33); }
+    #foret { background: radial-gradient(circle, #00ff88, #00331a); }
+    #neon { background: radial-gradient(circle, #00eaff, #000814); }
+    #secret1 { background: radial-gradient(circle, #ff00ff, #2b0033); }
+    #secret2 { background: radial-gradient(circle, #00ffea, #001b26); }
+
+    body.gaming .page {
+      filter: contrast(1.3) saturate(1.6);
+    }
+
+    .particle {
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      background: #ffffff;
+      border-radius: 50%;
+      opacity: 0.8;
+      animation: float 6s infinite ease-in-out;
+      filter: blur(1px);
+      z-index: 10;
+    }
+    @keyframes float {
+      0% { transform: translateY(0) scale(1); opacity: 0.8; }
+      50% { transform: translateY(-200px) scale(1.4); opacity: 1; }
+      100% { transform: translateY(0) scale(1); opacity: 0.8; }
+    }
+
+    .admin-toggle {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      z-index: 1001;
+    }
+
+    .admin-panel {
+      position: fixed;
+      bottom: 60px;
+      right: 10px;
+      width: 300px;
+      max-height: 80vh;
+      overflow-y: auto;
+      background: rgba(0,0,0,0.9);
+      border: 1px solid #555;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 0.8rem;
+      z-index: 1001;
+      display: none;
+    }
+    .admin-panel.visible { display: block; }
+
+    .admin-panel h2 { font-size: 1rem; margin-bottom: 4px; }
+    .admin-panel h3 { font-size: 0.9rem; margin: 8px 0 4px; }
+    .admin-panel label {
+      display: block;
+      margin-top: 4px;
+      margin-bottom: 2px;
+      font-size: 0.75rem;
+    }
+    .admin-panel input[type="text"],
+    .admin-panel input[type="password"],
+    .admin-panel input[type="number"] {
+      width: 100%;
+      padding: 4px 6px;
+      border-radius: 6px;
+      border: 1px solid #555;
+      background: #111;
+      color: #fff;
+      font-size: 0.75rem;
+    }
+    .admin-panel small {
+      font-size: 0.7rem;
+      opacity: 0.8;
+    }
+
+    #yt-audio {
+      position: fixed;
+      width: 0;
+      height: 0;
+      border: none;
+      visibility: hidden;
+    }
+
+    .secret-link { display: none; }
+    .secret-link.visible { display: inline-block; }
+
+    .hidden-world-page { display: none !important; }
+    .hidden-world-button { display: none !important; }
+  </style>
+</head>
+
+<body>
+  <div id="announcementBar" class="announcement-bar hidden"></div>
+
+  <div class="scene">
+    <div class="world">
+
+      <section id="accueil" class="page active">
+        <h1>Multivers 3D ULTIME</h1>
+
+        <div class="btn" data-world-id="feu" onclick="goTo('feu')">🔥 Monde du Feu</div>
+        <div class="btn" data-world-id="ocean" onclick="goTo('ocean')">🌊 Monde Océan</div>
+        <div class="btn" data-world-id="foret" onclick="goTo('foret')">🌿 Monde Forêt</div>
+        <div class="btn" data-world-id="neon" onclick="goTo('neon')">💎 Monde Néon</div>
+
+        <div id="customWorldButtons"></div>
+
+        <div class="btn secret-link" id="secretLink1" data-world-id="secret1" onclick="goTo('secret1')">🕵️ Monde Secret 1</div>
+        <div class="btn secret-link" id="secretLink2" data-world-id="secret2" onclick="goTo('secret2')">🕵️ Monde Secret 2</div>
+
+        <div class="da-btn" onclick="toggleDA()">🎮 Changer de DA (Mode Gaming)</div>
+      </section>
+
+      <section id="feu" class="page">
+        <h1>Royaume du Feu</h1>
+        <div class="btn" onclick="goTo('accueil')">Retour</div>
+      </section>
+
+      <section id="ocean" class="page">
+        <h1>Monde Océan</h1>
+        <div class="btn" onclick="goTo('accueil')">Retour</div>
+      </section>
+
+      <section id="foret" class="page">
+        <h1>Monde Forêt</h1>
+        <div class="btn" onclick="goTo('accueil')">Retour</div>
+      </section>
+
+      <section id="neon" class="page">
+        <h1>Monde Néon Futuriste</h1>
+        <div class="btn" onclick="goTo('accueil')">Retour</div>
+      </section>
+
+      <section id="secret1" class="page">
+        <h1>Monde Secret 1</h1>
+        <div class="btn" onclick="goTo('accueil')">Retour</div>
+      </section>
+
+      <section id="secret2" class="page">
+        <h1>Monde Secret 2</h1>
+        <div class="btn" onclick="goTo('accueil')">Retour</div>
+      </section>
+
+      <div id="customWorldsContainer"></div>
+
+    </div>
+  </div>
+
+  <div class="admin-toggle">
+    <button class="admin-btn" onclick="toggleAdminPanel()">🔒 Admin</button>
+  </div>
+
+  <div id="adminPanel" class="admin-panel">
+    <h2>Admin</h2>
+
+    <label>Mot de passe admin (2014) :</label>
+    <input type="password" id="adminPassword" placeholder="2014">
+    <button onclick="checkPassword()">Valider</button>
+    <small id="adminStatus" style="display:block;margin-top:4px;"></small>
+
+    <hr style="margin:8px 0;border-color:#333;">
+
+    <div id="adminControls" style="display:none;">
+
+      <h3>🎵 Musique YouTube</h3>
+      <label>Lien YouTube :</label>
+      <input type="text" id="ytUrl" placeholder="https://www.youtube.com/watch?v=...">
+      <button onclick="playYouTube()">▶️ Jouer</button>
+      <button onclick="stopYouTube()">⏹️ Stop</button>
+      <small>Le son de la vidéo sera joué en fond.</small>
+
+      <hr style="margin:8px 0;border-color:#333;">
+
+      <h3>📢 Annonce globale</h3>
+      <label>Message :</label>
+      <input type="text" id="announcementInput" placeholder="Message pour tout le monde">
+      <button onclick="setAnnouncement()">Publier</button>
+      <button onclick="clearAnnouncement()">Effacer</button>
+
+      <hr style="margin:8px 0;border-color:#333;">
+
+      <h3>✨ Particules</h3>
+      <label>Ajouter des particules :</label>
+      <input type="number" id="addParticlesCount" min="1" value="20">
+      <button onclick="adminAddParticles()">Ajouter</button>
+
+      <label>Supprimer un nombre de particules :</label>
+      <input type="number" id="removeParticlesCount" min="1" value="10">
+      <button onclick="adminRemoveParticles()">Supprimer</button>
+
+      <button onclick="adminClearParticles()">Supprimer TOUTES les particules</button>
+
+      <hr style="margin:8px 0;border-color:#333;">
+
+      <h3>🎨 Fond de la page d'accueil</h3>
+      <label>Couleur 1 :</label>
+      <input type="text" id="bgColor1" placeholder="#1b1b3a ou navy">
+      <label>Couleur 2 :</label>
+      <input type="text" id="bgColor2" placeholder="#050510">
+      <label>Couleur 3 (optionnel) :</label>
+      <input type="text" id="bgColor3">
+      <label>Couleur 4 (optionnel) :</label>
+      <input type="text" id="bgColor4">
+      <button onclick="applyAccueilBackground()">Appliquer</button>
+
+      <hr style="margin:8px 0;border-color:#333;">
+
+      <h3>🕵️ Mondes secrets</h3>
+      <button onclick="toggleSecret('secret1')">Révéler / cacher Monde Secret 1</button>
+      <button onclick="toggleSecret('secret2')">Révéler / cacher Monde Secret 2</button>
+
+      <hr style="margin:8px 0;border-color:#333;">
+
+      <h3>🪐 Créer un nouveau monde</h3>
+      <label>Nom du monde :</label>
+      <input type="text" id="worldName" placeholder="Monde Glace, Monde Lave...">
+      <label>Emoji / Icône :</label>
+      <input type="text" id="worldEmoji" placeholder="🔥, ❄️, 🪐...">
+      <label>Couleur de fond 1 :</label>
+      <input type="text" id="worldColor1" placeholder="#ff0000">
+      <label>Couleur de fond 2 :</label>
+      <input type="text" id="worldColor2" placeholder="#000000">
+      <button onclick="createWorld()">Créer le monde</button>
+
+      <hr style="margin:8px 0;border-color:#333;">
+
+      <h3>🌍 Gestion des mondes (cacher / restaurer)</h3>
+      <label>Mot de passe univers :</label>
+      <input type="password" id="universePassword" placeholder="univers">
+      <small>Obligatoire pour cacher / restaurer un monde.</small>
+
+      <label>ID du monde (ex: feu, ocean, foret, neon, secret1, custom-world-...) :</label>
+      <input type="text" id="worldIdManage" placeholder="feu, ocean, ...">
+      <button onclick="hideWorld()">Cacher le monde</button>
+      <button onclick="restoreWorld()">Restaurer le monde</button>
+      <small>Suppression douce : le monde est juste invisible.</small>
+
+    </div>
+  </div>
+
+  <iframe id="yt-audio" allow="autoplay"></iframe>
+
+  <script>
+    function goTo(pageId) {
+      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+      const target = document.getElementById(pageId);
+      if (target && !target.classList.contains("hidden-world-page")) {
+        target.classList.add("active");
+      }
+    }
+
+    function toggleDA() {
+      document.body.classList.toggle("gaming");
+    }
+
+    const world = document.querySelector(".world");
+    const scene = document.querySelector(".scene");
+
+    scene.addEventListener("mousemove", (e) => {
+      const rect = scene.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const midX = rect.width / 2;
+      const midY = rect.height / 2;
+      const rotateY = (x - midX) / midX * 35;
+      const rotateX = -(y - midY) / midY * 35;
+      world.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    });
+    scene.addEventListener("mouseleave", () => {
+      world.style.transform = `rotateX(0deg) rotateY(0deg)`;
+    });
+
+    const particles = [];
+    function createParticle() {
+      let p = document.createElement("div");
+      p.classList.add("particle");
+      p.style.left = Math.random() * 100 + "vw";
+      p.style.top = Math.random() * 100 + "vh";
+      p.style.animationDelay = Math.random() * 5 + "s";
+      p.style.opacity = Math.random();
+      document.body.appendChild(p);
+      particles.push(p);
+    }
+    for (let i = 0; i < 150; i++) createParticle();
+
+    let adminUnlocked = false;
+
+    function toggleAdminPanel() {
+      document.getElementById("adminPanel").classList.toggle("visible");
+    }
+
+    function checkPassword() {
+      const input = document.getElementById("adminPassword").value.trim();
+      const status = document.getElementById("adminStatus");
+      const controls = document.getElementById("adminControls");
+      if (input === "2014") {
+        adminUnlocked = true;
+        status.textContent = "Accès admin accordé ✅";
+        status.style.color = "#0f0";
+        controls.style.display = "block";
+      } else {
+        adminUnlocked = false;
+        status.textContent = "Mot de passe incorrect ❌";
+        status.style.color = "#f33";
+        controls.style.display = "none";
+      }
+    }
+
+    function normalizeYouTubeUrl(url) {
+      try {
+        if (!url.includes("youtube.com") && !url.includes("youtu.be")) return null;
+        let videoId = null;
+        if (url.includes("watch?v=")) {
+          const u = new URL(url);
+          videoId = u.searchParams.get("v");
+        } else if (url.includes("youtu.be/")) {
+          const parts = url.split("youtu.be/");
+          videoId = parts[1].split(/[?&]/)[0];
+        }
+        if (!videoId) return null;
+        return "https://www.youtube.com/embed/" + videoId + "?autoplay=1";
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function playYouTube() {
+      if (!adminUnlocked) return;
+      const url = document.getElementById("ytUrl").value.trim();
+      const iframe = document.getElementById("yt-audio");
+      const embed = normalizeYouTubeUrl(url);
+      if (embed) iframe.src = embed;
+      else alert("Lien YouTube invalide.");
+    }
+
+    function stopYouTube() {
+      document.getElementById("yt-audio").src = "";
+    }
+
+    function setAnnouncement() {
+      if (!adminUnlocked) return;
+      const msg = document.getElementById("announcementInput").value.trim();
+      const bar = document.getElementById("announcementBar");
+      if (msg) {
+        bar.textContent = msg;
+        bar.classList.remove("hidden");
+      }
+    }
+
+    function clearAnnouncement() {
+      if (!adminUnlocked) return;
+      const bar = document.getElementById("announcementBar");
+      bar.textContent = "";
+      bar.classList.add("hidden");
+    }
+
+    const secretState = { secret1: false, secret2: false };
+    function toggleSecret(id) {
+      if (!adminUnlocked) return;
+      secretState[id] = !secretState[id];
+      const linkId = id === "secret1" ? "secretLink1" : "secretLink2";
+      const link = document.getElementById(linkId);
+      if (secretState[id]) link.classList.add("visible");
+      else link.classList.remove("visible");
+    }
+
+    function adminAddParticles() {
+      if (!adminUnlocked) return;
+      const n = parseInt(document.getElementById("addParticlesCount").value, 10) || 0;
+      for (let i = 0; i < n; i++) createParticle();
+    }
+
+    function adminRemoveParticles() {
+      if (!adminUnlocked) return;
+      const n = parseInt(document.getElementById("removeParticlesCount").value, 10) || 0;
+      for (let i = 0; i < n; i++) {
+        const p = particles.pop();
+        if (!p) break;
+        p.remove();
+      }
+    }
+
+    function adminClearParticles() {
+      if (!adminUnlocked) return;
+      while (particles.length > 0) {
+        const p = particles.pop();
+        p.remove();
+      }
+    }
+
+    function applyAccueilBackground() {
+      if (!adminUnlocked) return;
+      const c1 = document.getElementById("bgColor1").value.trim();
+      const c2 = document.getElementById("bgColor2").value.trim();
+      const c3 = document.getElementById("bgColor3").value.trim();
+      const c4 = document.getElementById("bgColor4").value.trim();
+      const colors = [c1, c2, c3, c4].filter(c => c !== "");
+      if (!colors.length) return;
+      const accueil = document.getElementById("accueil");
+      accueil.style.background = `linear-gradient(135deg, ${colors.join(", ")})`;
+    }
+
+    let customWorldCount = 0;
+    function slugify(text) {
+      return text.toString().toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^\w\-]+/g, '')
+        .replace(/\-\-+/g, '-')
+        .replace(/^-+/, '')
+        .replace(/-+$/, '') || ("monde-" + Date.now());
+    }
+
+    function createWorld() {
+      if (!adminUnlocked) return;
+      const name = document.getElementById("worldName").value.trim();
+      const emoji = document.getElementById("worldEmoji").value.trim() || "🪐";
+      const col1 = document.getElementById("worldColor1").value.trim() || "#222";
+      const col2 = document.getElementById("worldColor2").value.trim() || "#000";
+      if (!name) { alert("Donne un nom à ton monde."); return; }
+
+      const id = "custom-world-" + slugify(name) + "-" + customWorldCount;
+      customWorldCount++;
+
+      const section = document.createElement("section");
+      section.id = id;
+      section.className = "page";
+      section.style.background = `radial-gradient(circle, ${col1}, ${col2})`;
+      section.innerHTML = `
+        <h1>${emoji} ${name}</h1>
+        <div class="btn" onclick="goTo('accueil')">Retour</div>
+      `;
+      document.getElementById("customWorldsContainer").appendChild(section);
+
+      const btn = document.createElement("div");
+      btn.className = "btn";
+      btn.dataset.worldId = id;
+      btn.textContent = `${emoji} ${name}`;
+      btn.onclick = () => goTo(id);
+      document.getElementById("customWorldButtons").appendChild(btn);
+
+      document.getElementById("worldName").value = "";
+      document.getElementById("worldEmoji").value = "";
+      document.getElementById("worldColor1").value = "";
+      document.getElementById("worldColor2").value = "";
+    }
+
+    function checkUniversePassword() {
+      const val = document.getElementById("universePassword").value.trim();
+      return val === "univers";
+    }
+
+    function hideWorld() {
+      if (!adminUnlocked) return;
+      if (!checkUniversePassword()) { alert("Mot de passe univers incorrect."); return; }
+      const id = document.getElementById("worldIdManage").value.trim();
+      if (!id) return;
+
+      const page = document.getElementById(id);
+      if (page) page.classList.add("hidden-world-page");
+
+      document.querySelectorAll(`[data-world-id="${id}"]`).forEach(btn => {
+        btn.classList.add("hidden-world-button");
+      });
+
+      const active = document.querySelector(".page.active");
+      if (active && active.id === id) goTo("accueil");
+    }
+
+    function restoreWorld() {
+      if (!adminUnlocked) return;
+      if (!checkUniversePassword()) { alert("Mot de passe univers incorrect."); return; }
+      const id = document.getElementById("worldIdManage").value.trim();
+      if (!id) return;
+
+      const page = document.getElementById(id);
+      if (page) page.classList.remove("hidden-world-page");
+
+      document.querySelectorAll(`[data-world-id="${id}"]`).forEach(btn => {
+        btn.classList.remove("hidden-world-button");
+      });
+    }
+  </script>
+</body>
+</html>
